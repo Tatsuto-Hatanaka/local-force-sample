@@ -32,7 +32,7 @@ V_i = \frac{U}{2}\langle n_{i}\rangle\\
 The magnetization $\langle\boldsymbol{m}_{i}\rangle$ can be obtained from the self-consistent equation under the mean-field approximation. Here, we assumed the ferromagnetic state polarized along the $z$-axis for simplicity, and hence, the Green's function is diagonal in the spin space.
 
 ```math
-G^{\sigma\sigma}_{ij}(\omega) = \frac{1}{N}\sum_{k}\frac{e^{i\bm{k\cdot(\bm{R}_i-\bm{R}_j)}}}{\omega-\epsilon_{\bm{k}}+\frac{U}{2}m_{0}\sigma}\\
+G^{\sigma\sigma}_{ij}(\omega) = \frac{1}{N}\sum_{k}\frac{e^{i\boldsymbol{k\cdot(\boldsymbol{R}_i-\boldsymbol{R}_j)}}}{\omega-\epsilon_{\boldsymbol{k}}+\frac{U}{2}m_{0}\sigma}\\
 m_{0} = -\frac{1}{\pi}\mathrm{Im}\int d\epsilon f(\epsilon)\left(G^{\uparrow\uparrow}_{00}(\epsilon)-G^{\downarrow\downarrow}_{00}(\epsilon)\right)
 ```
 
