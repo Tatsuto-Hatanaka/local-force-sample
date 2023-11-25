@@ -13,43 +13,43 @@ class local_force_simple_model:
         self.D  = D
         self.U  = U
         e_max = D + U*m_max/2 + 0.5
-        self.e_range = np.linspace(-e_max, e_max, e_num)
+        self.e_range = np.linspace(-e_max, e_max, e_num) + 1e-10 + 0j
         # for the self-consistent loop
         self.mag_init = 1
         self.mag_min = m_min
         self.mag_max = m_max
         mag = 1.0
-        dos0   = self.calc_dos(self.e_range)
-        dos_up = self.calc_dos(self.e_range + self.U * mag/2)
-        dos_dn = self.calc_dos(self.e_range - self.U * mag/2)
         gf0   = self.calc_green_function(self.e_range)
         gf_up = self.calc_green_function(self.e_range + self.U * mag/2)
         gf_dn = self.calc_green_function(self.e_range - self.U * mag/2)
-        integrated_dos0    = self.cumulative_simpson(dos0, self.e_range)
-        integrated_dos_up  = self.cumulative_simpson(dos_up, self.e_range)
-        integrated_dos_dn  = self.cumulative_simpson(dos_dn, self.e_range)
-        integrated_dos_all = self.cumulative_simpson(dos_up + dos_dn, self.e_range)
+        dos0   = - gf0.imag/np.pi
+        dos_up = - gf_up.imag/np.pi
+        dos_dn = - gf_dn.imag/np.pi
+        integrated_dos0    = self.cumulative_simpson(dos0, self.e_range.real)
+        integrated_dos_up  = self.cumulative_simpson(dos_up, self.e_range.real)
+        integrated_dos_dn  = self.cumulative_simpson(dos_dn, self.e_range.real)
+        integrated_dos_all = self.cumulative_simpson(dos_up + dos_dn, self.e_range.real)
         fig, ax = plt.subplots(2,2, figsize=(12,8), tight_layout=True)
         ax[0,0].set_title("DOS"+r"($\epsilon$)")
         ax[0,0].set_xlabel(r"$\epsilon$")
-        ax[0,0].plot(self.e_range, dos0, c="black", label=r"$D^{0}$")
-        ax[0,0].plot(self.e_range, dos_up, c="blue", label=r"$D^{\uparrow}$")
-        ax[0,0].plot(self.e_range, dos_dn, c="red", label=r"$D^{\downarrow}$")
+        ax[0,0].plot(self.e_range.real, dos0, c="black", label=r"$D^{0}$")
+        ax[0,0].plot(self.e_range.real, dos_up, c="blue", label=r"$D^{\uparrow}$")
+        ax[0,0].plot(self.e_range.real, dos_dn, c="red", label=r"$D^{\downarrow}$")
         ax[0,1].set_title("N"+r"($\epsilon$)")
         ax[0,1].set_xlabel(r"$\epsilon$")
-        ax[0,1].plot(self.e_range, integrated_dos0, c="black", label=r"$N^{0}$")
-        ax[0,1].plot(self.e_range, integrated_dos_up, c="blue", label=r"$N^{\uparrow}$")
-        ax[0,1].plot(self.e_range, integrated_dos_dn, c="red", label=r"$N^{\downarrow}$")
+        ax[0,1].plot(self.e_range.real, integrated_dos0, c="black", label=r"$N^{0}$")
+        ax[0,1].plot(self.e_range.real, integrated_dos_up, c="blue", label=r"$N^{\uparrow}$")
+        ax[0,1].plot(self.e_range.real, integrated_dos_dn, c="red", label=r"$N^{\downarrow}$")
         ax[1,0].set_title("Re[G"+r"($\epsilon$)"+"]")
         ax[1,0].set_xlabel(r"$\epsilon$")
-        ax[1,0].plot(self.e_range, gf0.real, c="black", label=r"Re[$G^{0}$]")
-        ax[1,0].plot(self.e_range, gf_up.real, c="blue", label=r"Re[$G^{\uparrow}$]")
-        ax[1,0].plot(self.e_range, gf_dn.real, c="red", label=r"Re[$G^{\downarrow}$]")
+        ax[1,0].plot(self.e_range.real, gf0.real, c="black", label=r"Re[$G^{0}$]")
+        ax[1,0].plot(self.e_range.real, gf_up.real, c="blue", label=r"Re[$G^{\uparrow}$]")
+        ax[1,0].plot(self.e_range.real, gf_dn.real, c="red", label=r"Re[$G^{\downarrow}$]")
         ax[1,1].set_title(r"Im[$G(\epsilon)$]")
         ax[1,1].set_xlabel(r"$\epsilon$")
-        ax[1,1].plot(self.e_range, gf0.imag, c="black", label=r"Im[$G^{0}$]")
-        ax[1,1].plot(self.e_range, gf_up.imag, c="blue", label=r"Im[$G^{\uparrow}$]")
-        ax[1,1].plot(self.e_range, gf_dn.imag, c="red", label=r"Im[$G^{\downarrow}$]")
+        ax[1,1].plot(self.e_range.real, gf0.imag, c="black", label=r"Im[$G^{0}$]")
+        ax[1,1].plot(self.e_range.real, gf_up.imag, c="blue", label=r"Im[$G^{\uparrow}$]")
+        ax[1,1].plot(self.e_range.real, gf_dn.imag, c="red", label=r"Im[$G^{\downarrow}$]")
         text = r"$U=$"+"{}\n".format(self.U) + r"$m_{0}=$"+"{}".format(mag)
         for ia1,ia2 in [[ia1, ia2] for ia1 in range(2) for ia2 in range(2)]:
             ax[ia1,ia2].axvline(0, color="black", linestyle='dashed', linewidth=0.5)
@@ -71,23 +71,8 @@ class local_force_simple_model:
             self.gf_dn = self.calc_green_function(self.e_range - self.U * self.mags[ie]/2)
             self.j0s[ie] = self.calc_j0(ie, fermi_dist)
 
-
-    def calc_dos(self, e_range):
-        dos = np.zeros_like(e_range)
-        for ie, e in enumerate(e_range):
-            if abs(e) > self.D:
-                dos[ie] = 0
-            else:
-                dos[ie] = 2*np.sqrt(1-(e/self.D)**2)/(np.pi*self.D)
-        return dos
-
     def calc_green_function(self, e_range):
-        gfs = np.zeros_like(e_range, dtype=np.complex128)
-        for ie, e in enumerate(e_range):
-            if abs(e_range[ie].real) > self.D:
-                gfs[ie] = (2/self.D) * (e/self.D - np.sign(e-self.D)*np.sqrt((e/self.D)**2-1))
-            else:
-                gfs[ie] = (2/self.D) * (e/self.D - 1j * np.sqrt(1-(e/self.D)**2))
+        gfs = (2/self.D) * (e_range/self.D - np.sign(e_range) * np.sqrt((e_range/self.D)**2-1))
         return gfs
 
     def magnetization_self_consistent(self, ie, fermi_dist):
@@ -102,13 +87,13 @@ class local_force_simple_model:
     def diff_magnetization(self, mag, ie, fermi_dist):
         gf_up = self.calc_green_function(self.e_range + self.U * mag/2)
         gf_dn = self.calc_green_function(self.e_range - self.U * mag/2)
-        mag_from_gf = - sp.integrate.simpson(fermi_dist*(gf_up-gf_dn).imag, self.e_range)/np.pi
+        mag_from_gf = - sp.integrate.simpson(fermi_dist.real*(gf_up-gf_dn).imag, self.e_range.real)/np.pi
         return mag - mag_from_gf
 
     def calc_j0(self, ie, fermi_dist):
-        integrand = fermi_dist * ((self.U*self.mags[ie])*(self.gf_up-self.gf_dn)\
+        integrand = fermi_dist.real * ((self.U*self.mags[ie])*(self.gf_up-self.gf_dn)\
                     + (self.U*self.mags[ie])**2 * self.gf_up * self.gf_dn)
-        j0 = - sp.integrate.simpson(integrand.imag, self.e_range)/(4*np.pi)
+        j0 = - sp.integrate.simpson(integrand.imag, self.e_range.real)/(4*np.pi)
         return j0
 
     def cumulative_simpson(self, vals, e_range):
@@ -138,10 +123,10 @@ if __name__=="__main__":
     fig, ax = plt.subplots(1,2, figsize=(12,5), tight_layout=True)
     ax[0].set_title(r"$m_0(\mu)$")
     ax[0].set_xlabel(r"$\mu$")
-    ax[0].plot(l.e_range, l.mags, label="magnetization")
+    ax[0].plot(l.e_range.real, l.mags, label="magnetization")
     ax[1].set_title(r"$J_0(\mu)$")
     ax[1].set_xlabel(r"$\mu$")
-    ax[1].plot(l.e_range, l.j0s, label=r"$J_0$")
+    ax[1].plot(l.e_range.real, l.j0s, label=r"$J_0$")
     for ia in range(2):
         ax[ia].set_xlim(-l.U, l.U)
         ax[ia].axvline(0, color="black", linestyle='dashed', linewidth=0.5)
